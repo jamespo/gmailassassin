@@ -3,15 +3,15 @@ options.certificates = false
 dofile(os.getenv("HOME") .. "/.private/imapfilter/gmailcreds.lua")
 
 
-all = myaccount.mymailbox:select_all()
+all = gmaccount.INBOX:is_unseen()
 
-results = Set {}
+spams = Set {}
 for _, mesg in ipairs(all) do
     mbox, uid = table.unpack(mesg)
     text = mbox[uid]:fetch_message()
-    if (pipe_to('bayesian-spam-filter', text) == 1) then
-        table.insert(results, mesg)
+    if (pipe_to('spamc -E', text) == 1) then
+        table.insert(spams, mesg)
     end
 end
 
-results:delete_messages()
+spams:move_messages(gmaccount['[Gmail]/Spam'])
